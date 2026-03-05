@@ -1,0 +1,222 @@
+*erun.txt*  A lightweight command runner panel for Neovim
+
+Author:   kotsmile
+License:  MIT
+Homepage: https://github.com/kotsmile/erun.nvim
+
+==============================================================================
+CONTENTS                                                        *erun-contents*
+
+  1. Introduction ............................................. |erun-intro|
+  2. Requirements ....................................... |erun-requirements|
+  3. Setup .................................................... |erun-setup|
+  4. Configuration .......................................... |erun-config|
+  5. Commands .............................................. |erun-commands|
+  6. Keymaps ............................................... |erun-keymaps|
+  7. Lua API ................................................... |erun-api|
+  8. File Link Formats .................................... |erun-links|
+  9. Highlight Groups .................................. |erun-highlights|
+
+==============================================================================
+1. INTRODUCTION                                                    *erun-intro*
+
+erun.nvim is a lightweight command runner panel for Neovim. It runs shell
+commands asynchronously and displays their output in a dedicated split window
+with clickable file links, syntax highlighting, and elapsed time tracking.
+
+==============================================================================
+2. REQUIREMENTS                                             *erun-requirements*
+
+- Neovim >= 0.8
+
+==============================================================================
+3. SETUP                                                          *erun-setup*
+
+Add the plugin with your package manager and call setup: >lua
+
+  require("erun").setup()
+<
+With lazy.nvim: >lua
+
+  {
+    "kotsmile/erun.nvim",
+    config = function()
+      require("erun").setup()
+    end,
+  }
+<
+==============================================================================
+4. CONFIGURATION                                                 *erun-config*
+
+Pass a table to `setup()` to override any defaults: >lua
+
+  require("erun").setup({
+    size = 30,              -- panel height in lines
+    position = "belowright", -- split position
+    keymap = "<leader>r",   -- global keymap (false to disable)
+    clear_env = true,       -- clear panel before each run
+    focus_panel = false,    -- focus panel when opened
+    panel_keymaps = {
+      open_file = "gf",
+      open_file_cr = "<CR>",
+      close = "q",
+      rerun = "r",
+    },
+  })
+<
+                                                          *erun-config-options*
+
+  `size`            (number, default: 30)
+                  Height of the output panel in lines.
+
+  `position`        (string, default: "belowright")
+                  Split position. One of: "belowright", "aboveleft",
+                  "botright", "topleft".
+
+  `keymap`          (string|false, default: "<leader>r")
+                  Global normal-mode keymap to trigger |erun.run()|.
+                  Set to `false` to disable.
+
+  `clear_env`       (boolean, default: true)
+                  Clear panel output before each run.
+
+  `focus_panel`     (boolean, default: false)
+                  Focus the panel window when it opens.
+
+  `panel_keymaps`   (table)
+                  Buffer-local keymaps inside the output panel.
+                  Set any value to `false` to disable that mapping.
+
+==============================================================================
+5. COMMANDS                                                    *erun-commands*
+
+                                                                        *:Erun*
+:Erun {cmd}            Set the command to {cmd} and run it immediately.
+                       Supports tab completion for executables and file paths.
+
+==============================================================================
+6. KEYMAPS                                                      *erun-keymaps*
+
+Global (configurable via `keymap` option):
+
+  `<leader>r`        Run the stored command, or prompt for one.
+
+Panel buffer keymaps (configurable via `panel_keymaps`):
+
+  `gf`               Jump to file link under cursor.
+  `<CR>`             Jump to file link under cursor.
+  `q`                Close the panel.
+  `r`                Rerun the last command.
+
+==============================================================================
+7. LUA API                                                          *erun-api*
+
+                                                                  *erun.setup()*
+erun.setup({opts})
+  Initialize the plugin with optional configuration.
+  See |erun-config| for available options.
+
+                                                                    *erun.run()*
+erun.run({opts?})
+  Run the stored command. If no command is set, prompts for one.
+  Optional table with `cmd` field to set and run a specific command: >lua
+    require("erun").run({ cmd = "make test" })
+<
+                                                                   *erun.stop()*
+erun.stop()
+  Stop the currently running job, if any.
+
+                                                                *erun.set_cmd()*
+erun.set_cmd({cmd})
+  Set the command string without running it.
+
+                                                                 *erun.toggle()*
+erun.toggle()
+  Toggle the output panel open or closed.
+
+                                                                  *erun.close()*
+erun.close()
+  Close the output panel window.
+
+==============================================================================
+8. FILE LINK FORMATS                                             *erun-links*
+
+erun.nvim automatically detects and highlights clickable file references
+in command output from many languages and tools. Press `gf` or `<CR>` on
+any highlighted link to jump to that location.
+
+Supported formats:
+
+  Python ~
+    `File "app.py", line 12, in main`
+
+  Rust (cargo/rustc) ~
+    `--> src/main.rs:4:13`
+
+  C# / MSBuild ~
+    `Program.cs(12,5): error CS1002: ; expected`
+
+  Java / Kotlin / Scala ~
+    `at com.example.App.main(App.java:15)`
+
+  Node.js / TypeScript (stack traces) ~
+    `at Object.<anonymous> (/home/user/app.js:10:15)`
+
+  PHP ~
+    `Fatal error: ... in /var/www/app.php on line 12`
+
+  Perl ~
+    `Undefined subroutine called at script.pl line 12.`
+
+  CMake ~
+    `CMake Error at CMakeLists.txt:15 (find_package):`
+
+  Webpack ~
+    `ERROR in ./src/index.js 10:2-15`
+
+  Valgrind ~
+    `==12345==    by 0x400544: main (example.c:6)`
+
+  Elixir ~
+    `warning: variable "x" is unused (lib/app.ex:3)`
+
+  Generic file:line:col ~
+    C/C++ (gcc/clang), Go, Haskell, Swift, Zig, Dart,
+    TypeScript (tsc), ESLint, Pylint, flake8, Vite
+    `main.c:10:5: error: use of undeclared identifier`
+
+  Generic file:line ~
+    Ruby, Lua, grep, ripgrep, Make
+    `app.rb:12: syntax error, unexpected end-of-input`
+
+==============================================================================
+9. HIGHLIGHT GROUPS                                          *erun-highlights*
+
+All groups are defined with `default = true` so they can be overridden.
+
+  `ERunModeLine`     Header line showing the working directory.
+                   Default: links to |hl-Comment|
+
+  `ERunStarted`      "Started at ..." line.
+                   Default: links to |hl-DiagnosticInfo|
+
+  `ERunCmd`          The "$ command" line.
+                   Default: links to |hl-Title|
+
+  `ERunStdout`       Standard output lines.
+                   Default: links to |hl-Normal|
+
+  `ERunStderr`       Standard error lines.
+                   Default: links to |hl-DiagnosticError|
+
+  `ERunFinished`     Success footer line.
+                   Default: links to |hl-DiagnosticOk|
+
+  `ERunFailed`       Failure footer line.
+                   Default: links to |hl-DiagnosticError|
+
+  `ERunLink`         Clickable file:line references in output.
+                   Default: links to |hl-Underlined|
+
+==============================================================================
+ vim:tw=78:ts=8:ft=help:norl:
