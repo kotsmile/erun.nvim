@@ -27,6 +27,25 @@ function M.stop()
   end
 end
 
+--- Read the command from the $ line in the output buffer and update run_cmd.
+local function sync_cmd_from_buffer()
+  local b = panel.buf()
+  if not b or not vim.api.nvim_buf_is_valid(b) then
+    return
+  end
+  local lines = vim.api.nvim_buf_get_lines(b, 3, 4, false)
+  if not lines or not lines[1] then
+    return
+  end
+  local line = lines[1]
+  if line:sub(1, 2) == "$ " then
+    local cmd = line:sub(3)
+    if cmd ~= "" then
+      run_cmd = cmd
+    end
+  end
+end
+
 --- Run the current command (or prompt for one).
 ---@param opts? {cmd?: string}
 function M.run(opts)
@@ -34,6 +53,8 @@ function M.run(opts)
 
   if opts.cmd then
     run_cmd = opts.cmd
+  else
+    sync_cmd_from_buffer()
   end
 
   if not run_cmd then
@@ -55,7 +76,7 @@ function M.run(opts)
   run_id = run_id + 1
   local current_id = run_id
 
-  panel.ensure(M.run)
+  panel.ensure(M.run, M.stop)
 
   local buf = panel.buf()
   local ns = panel.ns()

@@ -58,6 +58,8 @@ end
 function M.toggle()
   require("erun.panel").toggle(function()
     require("erun.runner").run()
+  end, function()
+    require("erun.runner").stop()
   end)
 end
 

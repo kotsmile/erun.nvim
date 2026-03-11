@@ -20,6 +20,7 @@ M.defaults = {
     open_file_cr = "<CR>",
     close = "q",
     rerun = "r",
+    stop = "<C-c>",
   },
 }
 

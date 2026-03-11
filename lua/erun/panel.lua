@@ -53,7 +53,8 @@ end
 
 --- Ensure the panel split and buffer exist.
 ---@param run_fn function Reference to the run function for the rerun keymap
-function M.ensure(run_fn)
+---@param stop_fn function Reference to the stop function for the interrupt keymap
+function M.ensure(run_fn, stop_fn)
   if win and vim.api.nvim_win_is_valid(win) then
     return
   end
@@ -84,6 +85,9 @@ function M.ensure(run_fn)
     if km.rerun then
       vim.keymap.set("n", km.rerun, run_fn, { buffer = buf, nowait = true, desc = "erun: rerun command" })
     end
+    if km.stop then
+      vim.keymap.set("n", km.stop, stop_fn, { buffer = buf, nowait = true, desc = "erun: stop execution" })
+    end
   end
 
   vim.api.nvim_win_set_buf(win, buf)
@@ -103,11 +107,12 @@ end
 
 --- Toggle the panel open/closed.
 ---@param run_fn function
-function M.toggle(run_fn)
+---@param stop_fn function
+function M.toggle(run_fn, stop_fn)
   if M.is_open() then
     M.close()
   else
-    M.ensure(run_fn)
+    M.ensure(run_fn, stop_fn)
   end
 end
 
