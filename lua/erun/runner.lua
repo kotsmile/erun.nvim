@@ -163,10 +163,10 @@ function M.run(opts)
 
         local finish_line, hl
         if code == 0 then
-          finish_line = string.format("Finished at %s (elapsed %s)", finished_at, elapsed_str)
+          finish_line = string.format("Finished at %s, duration %s", finished_at, elapsed_str)
           hl = "ERunFinished"
         else
-          finish_line = string.format("Exited abnormally with code %d at %s (elapsed %s)", code, finished_at, elapsed_str)
+          finish_line = string.format("Exited abnormally with code %d at %s, duration %s", code, finished_at, elapsed_str)
           hl = "ERunFailed"
         end
 
