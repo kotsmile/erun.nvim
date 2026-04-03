@@ -9,6 +9,7 @@ A lightweight command runner panel for Neovim. Run shell commands asynchronously
 - Run any shell command asynchronously from within Neovim
 - Output displayed in a persistent bottom panel with syntax highlighting
 - **Clickable file links** -- jump to file references in command output from [20+ languages and tools](#supported-file-link-formats) (compiler errors, test failures, grep results, etc.)
+- **`:Emake` command** -- dedicated Makefile runner with tab completion for targets and inline diagnostics for invalid targets
 - Smart tab completion for executables and file paths (shell-operator aware)
 - Elapsed time tracking with formatted duration
 - Distinct highlighting for stdout, stderr, success, and failure
@@ -95,6 +96,7 @@ All options shown above are the defaults. Calling `require("erun").setup()` with
 | Command | Description |
 |---|---|
 | `:Erun <cmd>` | Set and run a shell command. Supports tab completion. |
+| `:Emake [target]` | Run a Makefile target. Tab-completes targets from `Makefile`. Warns on invalid targets but still runs (supports dynamic targets). |
 
 ### Keymaps
 
@@ -254,6 +256,30 @@ README.md:34:3:      - TODO: document API                  # ERunStdout, file li
 Finished at Wed Mar 05 19:00:01 (elapsed 0.05s)           # ERunFinished
 ```
 
+## Emake -- Makefile Runner
+
+![Emake demo](demo/emake-demo.gif)
+
+`:Emake` provides a dedicated interface for working with Makefiles:
+
+- **Tab completion** -- press `<Tab>` after `:Emake` to see all available targets parsed from your `Makefile`
+- **Target validation** -- warns if a target is not found in the Makefile (but still runs, since make supports dynamic/included targets)
+- **Inline diagnostics** -- when make reports "No rule to make target", an error diagnostic is shown on the relevant output line
+- **Panel rerun** -- editing the `$ make ...` command line in the panel and pressing `r` validates the new target before rerunning
+
+### Example Makefile workflow
+
+```vim
+" Run the build target (tab-completes from Makefile)
+:Emake build
+
+" Run make with no target (runs default target)
+:Emake
+
+" Invalid target -- shows warning, then runs anyway
+:Emake nonexistent
+```
+
 ## Examples
 
 ### Run a build command
@@ -288,7 +314,7 @@ end, { desc = "Run tests" })
 ```lua
 {
   "kotsmile/erun.nvim",
-  cmd = "Erun",
+  cmd = { "Erun", "Emake" },
   keys = {
     { "<leader>r", function() require("erun").run() end, desc = "erun: run command" },
     { "<leader>rt", function() require("erun").toggle() end, desc = "erun: toggle panel" },
@@ -334,6 +360,7 @@ All highlight groups use `default = true`, so you can override them in your colo
 | `ERunFinished` | `DiagnosticOk` | Success footer line |
 | `ERunFailed` | `DiagnosticError` | Failure footer line |
 | `ERunLink` | `Underlined` | Clickable file:line references |
+| `ERunMakeWarn` | `DiagnosticWarn` | Emake target validation warnings |
 
 ## License
 

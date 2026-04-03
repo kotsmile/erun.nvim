@@ -18,6 +18,7 @@ function M.setup(opts)
   vim.api.nvim_set_hl(0, "ERunFinished", { link = "DiagnosticOk", default = true })
   vim.api.nvim_set_hl(0, "ERunFailed", { link = "DiagnosticError", default = true })
   vim.api.nvim_set_hl(0, "ERunLink", { link = "Underlined", default = true })
+  vim.api.nvim_set_hl(0, "ERunMakeWarn", { link = "DiagnosticWarn", default = true })
 
   -- User command
   vim.api.nvim_create_user_command("Erun", function(cmd_opts)
@@ -26,6 +27,31 @@ function M.setup(opts)
     nargs = "+",
     complete = function(...)
       return require("erun.complete").complete(...)
+    end,
+  })
+
+  -- Make command
+  vim.api.nvim_create_user_command("Emake", function(cmd_opts)
+    local make = require("erun.make")
+    local target = cmd_opts.args
+
+    if target ~= "" and vim.fn.filereadable("Makefile") == 1 then
+      if not make.validate_target(target) then
+        vim.notify("Emake: target '" .. target .. "' not found in Makefile", vim.log.levels.WARN)
+      end
+    elseif vim.fn.filereadable("Makefile") ~= 1 then
+      vim.notify("Emake: no Makefile found in " .. vim.fn.getcwd(), vim.log.levels.WARN)
+    end
+
+    local cmd = "make"
+    if target ~= "" then
+      cmd = cmd .. " " .. target
+    end
+    require("erun.runner").run({ cmd = cmd })
+  end, {
+    nargs = "?",
+    complete = function(arglead, _, _)
+      return require("erun.make").complete(arglead)
     end,
   })
 

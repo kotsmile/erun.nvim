@@ -6,6 +6,7 @@ local M = {}
 local run_cmd = nil
 local run_job = nil
 local run_id = 0
+local diag_ns = vim.api.nvim_create_namespace("erun_diag")
 
 --- Get the current command.
 ---@return string|nil
@@ -42,6 +43,15 @@ local function sync_cmd_from_buffer()
     local cmd = line:sub(3)
     if cmd ~= "" then
       run_cmd = cmd
+
+      -- Validate make target if command starts with "make"
+      local target = cmd:match("^make%s+([%w_%-%.]+)")
+      if target and vim.fn.filereadable("Makefile") == 1 then
+        local make = require("erun.make")
+        if not make.validate_target(target) then
+          vim.notify("Emake: target '" .. target .. "' not found in Makefile", vim.log.levels.WARN)
+        end
+      end
     end
   end
 end
@@ -88,6 +98,7 @@ function M.run(opts)
 
   vim.api.nvim_buf_set_lines(buf, 0, -1, false, { mode_line, started_line, "", "$ " .. run_cmd })
   vim.api.nvim_buf_clear_namespace(buf, ns, 0, -1)
+  vim.diagnostic.reset(diag_ns, buf)
   vim.api.nvim_buf_add_highlight(buf, ns, "ERunModeLine", 0, 0, -1)
   vim.api.nvim_buf_add_highlight(buf, ns, "ERunStarted", 1, 0, -1)
   vim.api.nvim_buf_add_highlight(buf, ns, "ERunCmd", 3, 0, -1)
@@ -132,6 +143,19 @@ function M.run(opts)
             local lnum = vim.api.nvim_buf_line_count(buf) - 1
             vim.api.nvim_buf_add_highlight(buf, ns, "ERunStderr", lnum, 0, -1)
             links.highlight(buf, ns, lnum, line)
+
+            -- Detect make "No rule to make target" errors
+            local bad_target = line:match("No rule to make target '([^']+)'")
+            if bad_target then
+              vim.diagnostic.set(diag_ns, buf, {
+                {
+                  lnum = lnum,
+                  col = 0,
+                  message = "unknown make target '" .. bad_target .. "'",
+                  severity = vim.diagnostic.severity.ERROR,
+                },
+              }, { virtual_text = true })
+            end
           end
         end
         panel.scroll_to_bottom()
