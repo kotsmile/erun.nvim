@@ -2,6 +2,8 @@
 
 A lightweight command runner panel for Neovim. Run shell commands asynchronously and browse their output in a dedicated split with clickable file links.
 
+![erun.nvim demo](demo/erun-demo.gif)
+
 ## Features
 
 - Run any shell command asynchronously from within Neovim

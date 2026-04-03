@@ -1,0 +1,16 @@
+package main
+
+import "fmt"
+
+func main() {
+	name := "erun.nvim"
+	fmt.Println("Hello from " + name)
+
+	result := add(2, 3)
+	fmt.Println("2 + 3 =", result)
+
+}
+
+func add(a, b int) int {
+	return a + b
+}
