@@ -1,6 +1,6 @@
 # erun.nvim — real Go development workflow demo
 Output demo/erun-demo.gif
-Set FontSize 14
+Set FontSize 20
 Set Width 1200
 Set Height 800
 Set Theme "Catppuccin Mocha"
